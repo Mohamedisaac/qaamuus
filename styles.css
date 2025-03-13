@@ -1,0 +1,214 @@
+:root {
+    --primary-color: #2196F3;
+    --secondary-color: #e3f2fd;
+    --background-color: #f5fbff;
+    --text-color: #333;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+    gap: 5px;
+}
+
+.tabs button {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 15px 15px 0 0;
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    margin-bottom: -1px;
+}
+
+.tabs button:hover {
+    background-color: #bbdefb;
+}
+
+.tabs button.active {
+    background-color: white;
+    color: var(--primary-color);
+    border-bottom: 3px solid var(--primary-color);
+    z-index: 1;
+}
+
+.dom {
+    padding: 9px;
+}
+
+#search-input {
+    width: 100%;
+    padding: 15px 50px 15px 20px;
+    border: 2px solid var(--primary-color);
+    border-radius: 30px;
+    font-size: 16px;
+    box-sizing: border-box;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%232196F3" width="24" height="24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 24px;
+}
+
+#search-input:focus {
+    outline: none;
+    box-shadow: 0 0 8px rgba(33, 150, 243, 0.3);
+}
+
+#subject-select {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid var(--primary-color);
+    border-radius: 5px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    appearance: none;
+    background-color: white;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#search-results, #subject-entries {
+    background-color: white;
+    border-radius: 0 15px 15px 15px;
+    padding: 20px;
+    margin-top: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#search-results li, #subject-entries li {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+#search-results li:last-child, #subject-entries li:last-child {
+    border-bottom: none;
+}
+
+#search-results li:hover, #subject-entries li:hover {
+    background-color: var(--secondary-color);
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .tabs button {
+        padding: 12px 15px;
+        font-size: 14px;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    #search-input, #subject-select {
+        padding: 12px 45px 12px 15px;
+        font-size: 14px;
+    }
+    
+    #search-results, #subject-entries {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 15px;
+    }
+    
+    .tabs button {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    
+    #search-results li, #subject-entries li {
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
+
+
+/* Update existing .about-btn styles The i button*/
+.about-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    font-style: italic;
+    font-size: 16px;
+    border: 1.5px solid white;
+}
+
+/* Keep the rest of the modal styles the same */
+
+.about-btn:hover {
+    transform: scale(1.1);
+    background-color: #1976D2;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(2px);
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    animation: modalFade 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+@keyframes modalFade {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: var(--text-color);
+}
