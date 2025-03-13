@@ -1,4 +1,5 @@
 let db;
+let hasLoadedMansuur = false;
 
 // Load SQLite Database
 async function loadDB() {
@@ -31,16 +32,31 @@ function searchWord() {
     if (query.length === 0) return;
 
     let tables = getTableNames();
-    tables.forEach(table => {
-        let res = db.exec(`SELECT ereyga, micnaha FROM "${table}" WHERE ereyga LIKE ?`, [`%${query}%`]);
-        if (res.length > 0) {
-            res[0].values.forEach(row => {
-                let li = document.createElement("li");
-                li.textContent = `[${table}] ${row[0]}: ${row[1]}`;
-                resultsContainer.appendChild(li);
-            });
+    let normalTables = tables.filter(table => table !== "Soomaali_Mansuur");
+
+    // Load smaller tables first
+    normalTables.forEach(table => searchTable(table, query));
+
+    // Load Soomaali_Mansuur later if needed
+    setTimeout(() => {
+        if (!hasLoadedMansuur) {
+            searchTable("Soomaali_Mansuur", query);
+            hasLoadedMansuur = true;
         }
-    });
+    }, 2000); // Delay loading Mansuur by 2 seconds
+}
+
+// Helper function to search a single table
+function searchTable(table, query) {
+    let resultsContainer = document.getElementById("search-results");
+    let res = db.exec(`SELECT ereyga, micnaha FROM "${table}" WHERE ereyga LIKE ?`, [`%${query}%`]);
+    if (res.length > 0) {
+        res[0].values.forEach(row => {
+            let li = document.createElement("li");
+            li.textContent = `[${table}] ${row[0]}: ${row[1]}`;
+            resultsContainer.appendChild(li);
+        });
+    }
 }
 
 // Load Subjects in Dropdown
@@ -49,12 +65,24 @@ function loadSubjects() {
     subjectSelect.innerHTML = `<option value="">Dooro Qaamuus...</option>`;
 
     let tables = getTableNames();
-    tables.forEach(table => {
-        let option = document.createElement("option");
-        option.value = table;
-        option.textContent = table;
-        subjectSelect.appendChild(option);
-    });
+    let normalTables = tables.filter(table => table !== "Soomaali_Mansuur");
+
+    // Load smaller tables first
+    normalTables.forEach(table => addSubjectOption(table));
+
+    // Load Soomaali_Mansuur after a delay of 4 seconds
+    setTimeout(() => {
+        addSubjectOption("Soomaali_Mansuur");
+    }, 4000);
+}
+
+// Helper function to add subjects to dropdown
+function addSubjectOption(table) {
+    let subjectSelect = document.getElementById("subject-select");
+    let option = document.createElement("option");
+    option.value = table;
+    option.textContent = table;
+    subjectSelect.appendChild(option);
 }
 
 // Load Entries for Selected Subject
@@ -78,7 +106,7 @@ function loadSubject() {
 // Load Database on Startup
 loadDB();
 
-// Add these functions
+// Add About Modal functions
 function showAbout() {
     document.querySelector('.modal-overlay').style.display = 'flex';
 }
@@ -99,4 +127,3 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Escape') hideAbout();
     });
 });
-
