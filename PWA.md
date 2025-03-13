@@ -2,13 +2,13 @@ To convert this dictionary app into an installable offline web app (Progressive 
 
 1. **Create a Service Worker** (`sw.js`):
 ```javascript
-const CACHE_NAME = 'dictionary-v1';
+const CACHE_NAME = 'dictionary-v2';
 const ASSETS = [
   '/',
   '/index.html',
   '/style.css',
   '/app.js',
-  '/dictionary.json'
+  '/dictionary.db'
 ];
 
 // Install event
