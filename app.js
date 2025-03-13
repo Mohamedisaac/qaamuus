@@ -1,176 +1,102 @@
-let dictionaryData = [];
-let deferredPrompt; // For PWA installation
+let db;
 
-// Initialize app
-window.addEventListener('DOMContentLoaded', () => {
-  initServiceWorker();
-  initSearch();
-  initInstallPrompt();
-});
+// Load SQLite Database
+async function loadDB() {
+    const SQL = await initSqlJs({ locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}` });
+    const response = await fetch("dictionary.db");
+    const buffer = await response.arrayBuffer();
+    db = new SQL.Database(new Uint8Array(buffer));
 
-// Service Worker Registration
-function initServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(registration => {
-        console.log('Service Worker registered with scope:', registration.scope);
-        
-        // Check for updates every hour
-        setInterval(() => registration.update(), 3600000);
-        
-        // Check if content is cached
-        if (registration.active) checkCachedContent();
-      })
-      .catch(error => {
-        console.error('Service Worker registration failed:', error);
-      });
-  }
+    loadSubjects();
 }
 
-// Search Functionality
-function initSearch() {
-  document.getElementById('searchButton').addEventListener('click', searchWord);
-  document.getElementById('searchInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') searchWord();
-  });
+// Switch Tabs
+function showTab(tab) {
+    document.getElementById("search-tab").style.display = tab === "search" ? "block" : "none";
+    document.getElementById("subjects-tab").style.display = tab === "subjects" ? "block" : "none";
 }
 
-// PWA Installation Handling
-function initInstallPrompt() {
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    showInstallButton();
-  });
-
-  window.addEventListener('appinstalled', () => {
-    console.log('App installed successfully');
-    hideInstallButton();
-    deferredPrompt = null;
-  });
+// Get all table names dynamically
+function getTableNames() {
+    let res = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"); 
+    return res.length > 0 ? res[0].values.map(row => row[0]) : [];
 }
 
-function showInstallButton() {
-  const installBtn = document.createElement('button');
-  installBtn.id = 'installBtn';
-  installBtn.innerHTML = `
-    <svg style="width:20px;height:20px;margin-right:8px" viewBox="0 0 24 24">
-      <path fill="currentColor" d="M12,2L4,5V6H20V5M15.35,8L15,7H13L12.65,8H9.24L10.24,18H13.58L14.58,8H15.35M14.4,21H9.6L8.6,19H15.4L14.4,21M16,9H14.85L14.15,19H15.9L16,9M3.46,12.88L4.61,11.73L6.38,13.5L9.21,10.67L10.36,11.82L6.38,15.8L3.46,12.88M3.46,17.88L4.61,16.73L6.38,18.5L9.21,15.67L10.36,16.82L6.38,20.8L3.46,17.88Z"/>
-    </svg>
-    Install App
-  `;
-  
-  Object.assign(installBtn.style, {
-    position: 'fixed',
-    bottom: '20px',
-    right: '20px',
-    padding: '12px 24px',
-    background: '#4CAF50',
-    color: 'white',
-    border: 'none',
-    borderRadius: '30px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-    zIndex: '1000'
-  });
+// Search Function (only in 'ereyga' column)
+function searchWord() {
+    let query = document.getElementById("search-input").value.trim();
+    let resultsContainer = document.getElementById("search-results");
+    resultsContainer.innerHTML = "";
 
-  installBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log('User response:', outcome);
-      if (outcome === 'accepted') hideInstallButton();
-    }
-  });
+    if (query.length === 0) return;
 
-  document.body.appendChild(installBtn);
-}
-
-function hideInstallButton() {
-  const btn = document.getElementById('installBtn');
-  if (btn) btn.remove();
-}
-
-// Data Handling
-async function loadDictionary() {
-  try {
-    const response = await fetch('/dictionary.json');
-    dictionaryData = await response.json();
-    console.log('Dictionary data loaded:', dictionaryData.length, 'entries');
-  } catch (error) {
-    console.error('Error loading dictionary:', error);
-    showError('Failed to load dictionary data');
-  }
-}
-
-// Search Functionality
-async function searchWord() {
-  const searchTerm = document.getElementById('searchInput').value
-    .trim()
-    .toLowerCase();
-  
-  const resultsDiv = document.getElementById('results');
-  resultsDiv.innerHTML = '';
-
-  if (!searchTerm) {
-    showError('Please enter a word to search');
-    return;
-  }
-
-  if (!dictionaryData.length) await loadDictionary();
-
-  const matches = dictionaryData.filter(entry => 
-    entry.english.toLowerCase() === searchTerm
-  );
-
-  if (matches.length === 0) {
-    showError('Ereygan kuma jiro');
-    return;
-  }
-
-  displayResults(matches);
-}
-
-function displayResults(matches) {
-  const resultsDiv = document.getElementById('results');
-  resultsDiv.innerHTML = matches.map(entry => `
-    <div class="result">
-      <h3>${entry.english}</h3>
-      <p><strong>Maaddada:</strong> ${entry.maaddada}</p>
-      <p><strong>Soomaali:</strong> ${entry.soomaali}</p>
-    </div>
-  `).join('');
-}
-
-function showError(message) {
-  const resultsDiv = document.getElementById('results');
-  resultsDiv.innerHTML = `<div class="no-results">${message}</div>`;
-}
-
-// Offline Check
-function checkCachedContent() {
-  caches.match('/dictionary.json')
-    .then(response => {
-      if (response) {
-        console.log('Using cached dictionary data');
-        return response.json();
-      }
-    })
-    .then(data => {
-      if (data) dictionaryData = data;
-    })
-    .catch(error => {
-      console.log('Cache check error:', error);
+    let tables = getTableNames();
+    tables.forEach(table => {
+        let res = db.exec(`SELECT ereyga, micnaha FROM "${table}" WHERE ereyga LIKE ?`, [`%${query}%`]);
+        if (res.length > 0) {
+            res[0].values.forEach(row => {
+                let li = document.createElement("li");
+                li.textContent = `[${table}] ${row[0]}: ${row[1]}`;
+                resultsContainer.appendChild(li);
+            });
+        }
     });
 }
 
-// Initialize dictionary data
-loadDictionary();
+// Load Subjects in Dropdown
+function loadSubjects() {
+    let subjectSelect = document.getElementById("subject-select");
+    subjectSelect.innerHTML = `<option value="">Dooro Qaamuus...</option>`;
 
-// Detect standalone mode
-if (window.matchMedia('(display-mode: standalone)').matches) {
-  console.log('Running in standalone mode');
-  document.documentElement.classList.add('standalone-mode');
+    let tables = getTableNames();
+    tables.forEach(table => {
+        let option = document.createElement("option");
+        option.value = table;
+        option.textContent = table;
+        subjectSelect.appendChild(option);
+    });
 }
+
+// Load Entries for Selected Subject
+function loadSubject() {
+    let subject = document.getElementById("subject-select").value;
+    let resultsContainer = document.getElementById("subject-entries");
+    resultsContainer.innerHTML = "";
+
+    if (!subject) return;
+
+    let res = db.exec(`SELECT ereyga, micnaha FROM "${subject}"`);
+    if (res.length > 0) {
+        res[0].values.forEach(row => {
+            let li = document.createElement("li");
+            li.textContent = `${row[0]}: ${row[1]}`;
+            resultsContainer.appendChild(li);
+        });
+    }
+}
+
+// Load Database on Startup
+loadDB();
+
+// Add these functions
+function showAbout() {
+    document.querySelector('.modal-overlay').style.display = 'flex';
+}
+
+function hideAbout() {
+    document.querySelector('.modal-overlay').style.display = 'none';
+}
+
+// Add event listener for the about button
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.about-btn').addEventListener('click', showAbout);
+    
+    // Close modal when clicking outside
+    document.querySelector('.modal-overlay').addEventListener('click', hideAbout);
+    
+    // Close modal with ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') hideAbout();
+    });
+});
+
