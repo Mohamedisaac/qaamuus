@@ -3,37 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- For modern browsers -->
-    <meta name="mobile-web-app-capable" content="yes">
-<!-- For legacy iOS support -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Qaamuuska Erey Bixinta</title>
-    <link rel="stylesheet" href="style.css">
-
-     <!-- SERVICE WORKER AND MANIFEST -->
-    <!-- Add manifest -->
-<link rel="manifest" href="manifest.json">
-<!-- Add iOS meta tags -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<!-- Add theme color -->
-<meta name="theme-color" content="#4CAF50">
+    <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-    <div class="search-container">
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Baar Erey...">
-            <button id="searchButton" aria-label="Search">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                    <path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-    <div id="results"></div>
 
-    <script src="app.js"></script>
+    <div class="tabs">
+        <button onclick="showTab('search')">Baar</button>
+        <button onclick="showTab('subjects')">Arag Ereyada</button>
+    </div>
+
+    <div id="search-tab">
+        <input type="text" id="search-input" placeholder="Baar Erey..." oninput="searchWord()">
+        <div class="dom"><ul id="search-results"></ul></div>
+    </div>
+<!---->
+    <div id="subjects-tab" style="display: none;">
+        <select id="subject-select" onchange="loadSubject()">
+            <option value="">Dooro Qaamuus</option>
+        </select>
+        <ul id="subject-entries"></ul>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+
+    <script src="app.js"> </script>
+ 
+
+<!-- About page-->
+    <div class="about-btn">i</div>
+<div class="modal-overlay" onclick="hideAbout()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="hideAbout()">&times;</button>
+        <h4>Ku Saabsan Qaamuuska</h4>
+        <p>This is an offline dictionary app created using web technologies. Features include:</p>
+        <ol>
+            <li>Word search functionality</li>
+            <li>Subject-based browsing</li>
+            <li>Responsive design</li>
+            <li>Offline capability</li>
+        </ol>
+        <div>Mahadcelin: Waxaan u mahadcelinayaa ustaad Xasan Axmed Xuseen oo igu dhaliyay fikradda samaynta barnaamijkan, kaalin wayna ka qaatay isku dabaridka iyo qoridda ereyada qaamuuska. <br> Sidoo kale waxaan u mahadcelinayaa dhammaan ardayda sharafta badan ee nagala qeyb qaatay qoridda ereyada qaamuuska.</div>
+        <div> Fadlan wixii talo ama sixid ah nagala soo xiriir: </div>
+    </div>
+   </div>
+
 </body>
+
+
+
 </html>
