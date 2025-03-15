@@ -8,7 +8,7 @@ async function loadDB() {
     const buffer = await response.arrayBuffer();
     db = new SQL.Database(new Uint8Array(buffer));
 
-    loadSubjects();
+    loadSubjectsInOrder();
 }
 
 // Switch Tabs
@@ -19,61 +19,22 @@ function showTab(tab) {
 
 // Get all table names dynamically
 function getTableNames() {
-    let res = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"); 
+    let res = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
     return res.length > 0 ? res[0].values.map(row => row[0]) : [];
 }
 
-// Search Function (only in 'ereyga' column)
-function searchWord() {
-    let query = document.getElementById("search-input").value.trim();
-    let resultsContainer = document.getElementById("search-results");
-    resultsContainer.innerHTML = "";
-
-    if (query.length === 0) return;
-
-    let tables = getTableNames();
-    let normalTables = tables.filter(table => table !== "Soomaali_Mansuur");
-
-    // Load smaller tables first
-    normalTables.forEach(table => searchTable(table, query));
-
-    // Load Soomaali_Mansuur later if needed
-    setTimeout(() => {
-        if (!hasLoadedMansuur) {
-            searchTable("Soomaali_Mansuur", query);
-            hasLoadedMansuur = true;
-        }
-    }, 2000); // Delay loading Mansuur by 2 seconds
-}
-
-// Helper function to search a single table
-function searchTable(table, query) {
-    let resultsContainer = document.getElementById("search-results");
-    let res = db.exec(`SELECT ereyga, micnaha FROM "${table}" WHERE ereyga LIKE ?`, [`%${query}%`]);
-    if (res.length > 0) {
-        res[0].values.forEach(row => {
-            let li = document.createElement("li");
-            li.textContent = `[${table}] ${row[0]}: ${row[1]}`;
-            resultsContainer.appendChild(li);
-        });
-    }
-}
-
-// Load Subjects in Dropdown
-function loadSubjects() {
+// Load subjects one at a time in order
+async function loadSubjectsInOrder() {
     let subjectSelect = document.getElementById("subject-select");
     subjectSelect.innerHTML = `<option value="">Dooro Qaamuus...</option>`;
 
     let tables = getTableNames();
-    let normalTables = tables.filter(table => table !== "Soomaali_Mansuur");
+    let orderedTables = ["Bayoloji", ...tables.filter(t => t !== "Bayoloji" && t !== "Soomaali_Mansuur"), "Soomaali_Mansuur"];
 
-    // Load smaller tables first
-    normalTables.forEach(table => addSubjectOption(table));
-
-    // Load Soomaali_Mansuur after a delay of 4 seconds
-    setTimeout(() => {
-        addSubjectOption("Soomaali_Mansuur");
-    }, 4000);
+    for (let i = 0; i < orderedTables.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Delay each load by 2 seconds
+        addSubjectOption(orderedTables[i]);
+    }
 }
 
 // Helper function to add subjects to dropdown
@@ -127,3 +88,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Escape') hideAbout();
     });
 });
+
+// Add service worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(registration => {
+          console.log('Service Worker registered: ', registration);
+        })
+        .catch(registrationError => {
+          console.log('Service Worker registration failed: ', registrationError);
+        });
+    });
+}
