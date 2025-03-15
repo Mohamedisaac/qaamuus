@@ -1,5 +1,6 @@
 let db;
 let hasLoadedMansuur = false;
+let loadedTables = new Set();
 
 // Load SQLite Database
 async function loadDB() {
@@ -34,6 +35,7 @@ async function loadSubjectsInOrder() {
     for (let i = 0; i < orderedTables.length; i++) {
         await new Promise(resolve => setTimeout(resolve, 2000)); // Delay each load by 2 seconds
         addSubjectOption(orderedTables[i]);
+        loadedTables.add(orderedTables[i]); // Mark table as loaded
     }
 }
 
@@ -59,6 +61,31 @@ function loadSubject() {
         res[0].values.forEach(row => {
             let li = document.createElement("li");
             li.textContent = `${row[0]}: ${row[1]}`;
+            resultsContainer.appendChild(li);
+        });
+    }
+}
+
+// Search Function (only in 'ereyga' column)
+function searchWord() {
+    let query = document.getElementById("search-input").value.trim();
+    let resultsContainer = document.getElementById("search-results");
+    resultsContainer.innerHTML = "";
+
+    if (query.length === 0) return;
+
+    let tables = Array.from(loadedTables); // Search only in loaded tables
+    tables.forEach(table => searchTable(table, query));
+}
+
+// Helper function to search a single table
+function searchTable(table, query) {
+    let resultsContainer = document.getElementById("search-results");
+    let res = db.exec(`SELECT ereyga, micnaha FROM "${table}" WHERE ereyga LIKE ?`, [`%${query}%`]);
+    if (res.length > 0) {
+        res[0].values.forEach(row => {
+            let li = document.createElement("li");
+            li.textContent = `[${table}] ${row[0]}: ${row[1]}`;
             resultsContainer.appendChild(li);
         });
     }
